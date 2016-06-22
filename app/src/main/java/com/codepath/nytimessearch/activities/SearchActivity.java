@@ -1,3 +1,5 @@
+//http://g.recordit.co/HuWWiGFTkh.gif   Working gif
+
 package com.codepath.nytimessearch.activities;
 
 import android.content.Intent;
@@ -15,6 +17,7 @@ import android.widget.GridView;
 
 import com.codepath.nytimessearch.Article;
 import com.codepath.nytimessearch.ArticleArrayAdapter;
+import com.codepath.nytimessearch.EndlessScrollListener;
 import com.codepath.nytimessearch.R;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -48,6 +51,19 @@ public class SearchActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         setUpViews();
 
+        GridView gvResults = (GridView) findViewById(R.id.gvResults);
+        // Attach the listener to the AdapterView onCreate
+        gvResults.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to your AdapterView
+
+                customLoadMoreDataFromApi(page);
+                // or customLoadMoreDataFromApi(totalItemsCount);
+                return true; // ONLY if more data is actually being loaded; false otherwise.
+            }
+        });
     }
 
     public void setUpViews(){
@@ -96,7 +112,11 @@ public class SearchActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onArticleSearch(View view){
+    public void loadArticles( int page){
+        if (page == 0) {
+            adapter.clear();
+        }
+
         String query = etQuery.getText().toString();
 
         //Toast.makeText(this, "Searching for " + query, Toast.LENGTH_LONG).show();
@@ -106,6 +126,7 @@ public class SearchActivity extends AppCompatActivity {
 
         params.put("api-key", "637b73d20e894e9080c16df0ce8c7a1b");
         params.put("q", query);
+
         client.get(url, params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -114,7 +135,7 @@ public class SearchActivity extends AppCompatActivity {
 
                 try {
                     articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
-                    adapter.clear();
+                    //////adapter.clear();
                     adapter.addAll(Article.fromJSONArray(articleJsonResults));
                     Log.d("DEBUG", articles.toString());
                 } catch (JSONException e){
@@ -122,5 +143,18 @@ public class SearchActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void onArticleSearch(View view){
+        loadArticles(0);
+    }
+
+    // Append more data into the adapter
+    public void customLoadMoreDataFromApi(int offset) {
+        // This method probably sends out a network request and appends new data items to your adapter.
+        // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
+        // Deserialize API response and then construct new objects to append to the adapter
+        loadArticles(offset);
+
     }
 }
