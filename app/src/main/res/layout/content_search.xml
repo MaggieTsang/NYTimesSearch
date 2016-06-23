@@ -12,6 +12,7 @@
     tools:context=".activities.SearchActivity"
     tools:showIn="@layout/activity_search">
 
+<!--
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,6 +34,8 @@
         android:layout_alignParentEnd="true"
         android:hint="@string/search"
         android:onClick="onArticleSearch"/>
+
+       -->
 
     <GridView
         android:layout_width="wrap_content"

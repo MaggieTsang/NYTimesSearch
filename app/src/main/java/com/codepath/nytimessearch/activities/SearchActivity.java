@@ -1,19 +1,20 @@
-//http://g.recordit.co/HuWWiGFTkh.gif   Working gif
-
 package com.codepath.nytimessearch.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import com.codepath.nytimessearch.Article;
 import com.codepath.nytimessearch.ArticleArrayAdapter;
@@ -31,14 +32,13 @@ import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
 
-
-//API: http://api.nytimes.com/svc/search/v2/articlesearch.json?api-key=637b73d20e894e9080c16df0ce8c7a1b&q=android
-
 public class SearchActivity extends AppCompatActivity {
 
     EditText etQuery;
     GridView gvResults;
-    Button btnSearch;
+    //Button btnSearch;
+
+    String tbQuery;
 
     ArrayList<Article> articles;
     ArticleArrayAdapter adapter;
@@ -57,10 +57,9 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
                 // Triggered only when new data needs to be appended to the list
-                // Add whatever code is needed to append new items to your AdapterView
+                // Appends new items to Adapter
 
                 customLoadMoreDataFromApi(page);
-                // or customLoadMoreDataFromApi(totalItemsCount);
                 return true; // ONLY if more data is actually being loaded; false otherwise.
             }
         });
@@ -69,7 +68,7 @@ public class SearchActivity extends AppCompatActivity {
     public void setUpViews(){
         etQuery = (EditText) findViewById(R.id.etQuery);
         gvResults = (GridView) findViewById(R.id.gvResults);
-        btnSearch = (Button) findViewById(R.id.btnSearch);
+        //btnSearch = (Button) findViewById(R.id.btnSearch);
         articles = new ArrayList<>();
         adapter = new ArticleArrayAdapter(this, articles);
         gvResults.setAdapter(adapter);
@@ -93,8 +92,42 @@ public class SearchActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_search, menu);
-        return true;
+        // getMenuInflater().inflate(R.menu.menu_search, menu);
+        //return true;
+
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_search, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // perform query here
+                tbQuery = query;
+                loadArticles(0, query);
+                searchView.clearFocus();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+        /*
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+        ShareActionProvider miShare = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        // get reference to WebView
+        WebView wvArticle = (WebView) findViewById(R.id.wvArticle);
+        // pass in the URL currently being used by the WebView
+        shareIntent.putExtra(Intent.EXTRA_TEXT, wvArticle.getUrl());
+        miShare.setShareIntent(shareIntent);
+        */
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -110,6 +143,53 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void loadArticles(int page, String query){
+        if (page == 0) {
+            adapter.clear();
+            Toast.makeText(this, "Searching for " + query, Toast.LENGTH_LONG).show();
+        }
+
+        //When text edit: String query = etQuery.getText().toString();
+        AsyncHttpClient client = new AsyncHttpClient();
+        String url = "http://api.nytimes.com/svc/search/v2/articlesearch.json";
+        RequestParams params = new RequestParams();
+
+        params.put("api-key", "637b73d20e894e9080c16df0ce8c7a1b");
+        params.put("q", query);
+
+        client.get(url, params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                Log.d("DEBUG", response.toString());
+                JSONArray articleJsonResults = null;
+
+                try {
+                    articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
+                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
+                    Log.d("DEBUG", articles.toString());
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    // Append more data into the adapter
+    public void customLoadMoreDataFromApi(int offset) {
+        // Appends new data items to your adapter.
+        // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
+        // Deserialize API response and then construct new objects to append to the adapter
+        loadArticles(offset, tbQuery);
+    }
+
+}
+
+
+ /*
+    public void onArticleSearch(View view){
+        loadArticles(0, tbQuery);
     }
 
     public void loadArticles( int page){
@@ -144,17 +224,4 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
     }
-
-    public void onArticleSearch(View view){
-        loadArticles(0);
-    }
-
-    // Append more data into the adapter
-    public void customLoadMoreDataFromApi(int offset) {
-        // This method probably sends out a network request and appends new data items to your adapter.
-        // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
-        // Deserialize API response and then construct new objects to append to the adapter
-        loadArticles(offset);
-
-    }
-}
+    */
