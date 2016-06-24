@@ -2,6 +2,7 @@ package com.codepath.nytimessearch.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.codepath.nytimessearch.Article;
 import com.codepath.nytimessearch.ArticleArrayAdapter;
+import com.codepath.nytimessearch.DatePickerFragment;
 import com.codepath.nytimessearch.EndlessScrollListener;
 import com.codepath.nytimessearch.R;
 import com.loopj.android.http.AsyncHttpClient;
@@ -32,7 +34,9 @@ import java.util.ArrayList;
 
 import cz.msebera.android.httpclient.Header;
 
-public class SearchActivity extends AppCompatActivity {
+public class SearchActivity extends AppCompatActivity{
+        //implements SearchFilters.OnFilterSearchListener{
+
 
     EditText etQuery;
     GridView gvResults;
@@ -50,6 +54,7 @@ public class SearchActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setUpViews();
+
 
         GridView gvResults = (GridView) findViewById(R.id.gvResults);
         // Attach the listener to the AdapterView onCreate
@@ -188,40 +193,23 @@ public class SearchActivity extends AppCompatActivity {
 
 
  /*
-    public void onArticleSearch(View view){
-        loadArticles(0, tbQuery);
+    Calender, Date Pick
+
+    // 3. This method is invoked in the activity after dialog is dismissed
+    // Access the filters result passed to the activity here
+    @Override
+    public void onUpdateFilters(SearchFilters filters) {
+        // Access the updated filters here and store in member variable
+        // Triggers a new search with these filters updated
     }
 
-    public void loadArticles( int page){
-        if (page == 0) {
-            adapter.clear();
-        }
+    private SearchFilters mFilters;
 
-        String query = etQuery.getText().toString();
-
-        //Toast.makeText(this, "Searching for " + query, Toast.LENGTH_LONG).show();
-        AsyncHttpClient client = new AsyncHttpClient();
-        String url = "http://api.nytimes.com/svc/search/v2/articlesearch.json";
-        RequestParams params = new RequestParams();
-
-        params.put("api-key", "637b73d20e894e9080c16df0ce8c7a1b");
-        params.put("q", query);
-
-        client.get(url, params, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                Log.d("DEBUG", response.toString());
-                JSONArray articleJsonResults = null;
-
-                try {
-                    articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
-                    //////adapter.clear();
-                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
-                    Log.d("DEBUG", articles.toString());
-                } catch (JSONException e){
-                    e.printStackTrace();
-                }
-            }
-        });
+    // Call this to display the filters dialog!
+    private void showFiltersDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        DatePickerFragment filtersDialogFragment =
+                SearchFilters.newInstance(mFilters);
+        //filtersDialogFragment.show(fm, "filter_activity");
     }
     */
